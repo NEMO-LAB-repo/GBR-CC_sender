@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>WebRTC Diagnostic Data Visualization </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="WebRTC Diagnostic Data Visualization ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/QiangWu769/msquic_cellular/blob/main/tools/cellninjia/VISUALIZATION_README.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+
+      <div class="content">
+        <div class="actionbar">
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="webrtc-diagnostic-data-visualization">WebRTC Diagnostic Data Visualization</h1>
+
+<h2 id="overview">Overview</h2>
+<p>This directory contains Python scripts for visualizing WebRTC diagnostic events from the <code>diag_report.txt</code> file. The visualization shows events organized by timestamp, SubFN (subframe number), and SysFN (system frame number), allowing precise analysis of each event.</p>
+<h2 id="files">Files</h2>
+<h3 id="main-scripts">Main Scripts</h3>
+<ul>
+<li><code>simple_viz.py</code> - Simple, reliable visualization script (recommended)</li>
+<li><code>diag_viz_clean.py</code> - More complex visualization with time-series plots</li>
+<li><code>diag_bsr.py</code> - Main diagnostic data collection and parsing script</li>
+</ul>
+<h3 id="generated-visualizations">Generated Visualizations</h3>
+<ul>
+<li><code>diag_report_simple_viz.png</code> - Basic event analysis charts</li>
+<li><code>diag_report_visualization.png</code> - Complex time-series visualization</li>
+<li><code>diag_report_combined_visualization.png</code> - Combined analysis charts</li>
+</ul>
+<h2 id="usage">Usage</h2>
+<h3 id="simple-visualization-recommended">Simple Visualization (Recommended)</h3>
+<pre><code class="lang-bash">python3 simple_viz.py /path/to/diag_report.txt
+</code></pre>
+<p>This creates four charts:</p>
+<ol>
+<li><strong>SubFN vs SysFN Distribution</strong> - Shows the relationship between subframe and system frame numbers</li>
+<li><strong>SysFN Over Time</strong> - Events plotted by their order in the data file, colored by SubFN</li>
+<li><strong>SubFN Distribution</strong> - Histogram of SubFN values</li>
+<li><strong>Latency Distribution</strong> - Histogram of pipeline latency (if available)</li>
+</ol>
+<h3 id="complex-visualization">Complex Visualization</h3>
+<pre><code class="lang-bash">python3 diag_viz_clean.py /path/to/diag_report.txt
+</code></pre>
+<p>This creates:</p>
+<ol>
+<li><strong>Event Timeline</strong> - Time-series plot grouped by SubFN</li>
+<li><strong>SubFN vs SysFN Heatmap</strong> - Frequency analysis</li>
+<li><strong>Pipeline Latency Over Time</strong> - Latency analysis with statistics</li>
+</ol>
+<h2 id="data-format">Data Format</h2>
+<p>The <code>diag_report.txt</code> file contains tab-separated values with columns:</p>
+<ul>
+<li><code>RAN_Event_Unix_Timestamp</code> - Event timestamp in Unix format</li>
+<li><code>Bridge_Read_Timestamp</code> - Bridge processing timestamp</li>
+<li><code>Python_Recv_Timestamp</code> - Python reception timestamp</li>
+<li><code>SubFN</code> - Subframe number (0-9)</li>
+<li><code>SysFN</code> - System frame number (0-1023)</li>
+<li><code>LCG_0</code>, <code>LCG_1</code>, <code>LCG_2</code>, <code>LCG_3</code> - Logical Channel Group buffer sizes</li>
+<li><code>Num_RBs</code> - Number of resource blocks</li>
+<li><code>TBS_Index</code> - Transport Block Size index</li>
+<li><code>Pipeline_Latency_ms</code> - Processing latency in milliseconds</li>
+</ul>
+<h2 id="event-analysis">Event Analysis</h2>
+<p>The visualization reveals:</p>
+<ul>
+<li><strong>Precise Event Timing</strong> - Same timestamp events are differentiated by SubFN/SysFN combinations</li>
+<li><strong>Resource Allocation Patterns</strong> - SubFN ranges 0-9, SysFN ranges 0-1023</li>
+<li><strong>Buffer Status</strong> - LCG values show logical channel group buffer states</li>
+<li><strong>Performance Metrics</strong> - Latency analysis shows processing delays</li>
+</ul>
+<h2 id="example-output">Example Output</h2>
+<p>From the sample data (95,032 events):</p>
+<ul>
+<li>SubFN range: 0-9 (10 unique values)</li>
+<li>SysFN range: 0-1023 (1000 unique values)</li>
+<li>Events grouped by timestamp show multiple SubFN/SysFN combinations per timestamp</li>
+<li>Pipeline latency statistics available for performance analysis</li>
+</ul>
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li>Python 3.x</li>
+<li>pandas</li>
+<li>matplotlib</li>
+<li>numpy</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Uses non-interactive matplotlib backend (Agg) for server environments</li>
+<li>Handles large datasets (95K+ events) efficiently</li>
+<li>Generates high-resolution PNG outputs (300 DPI)</li>
+<li>Provides both statistical summaries and visual analysis</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/QiangWu769/msquic_cellular/blob/main/tools/cellninjia/VISUALIZATION_README.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

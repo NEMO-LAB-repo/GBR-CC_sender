@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>msquic_cellular </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="msquic_cellular ">
+      
+      
+      <link rel="icon" href="favicon.ico">
+      <link rel="stylesheet" href="public/docfx.min.css">
+      <link rel="stylesheet" href="public/main.css">
+      <meta name="docfx:navrel" content="toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/QiangWu769/msquic_cellular/blob/main/README.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="index.html">
+            <img id="logo" class="svg" src="logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+
+      <div class="content">
+        <div class="actionbar">
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="msquic_cellular">msquic_cellular</h1>
+
+<h2 id="quick-start-submodules-and-build">Quick Start: Submodules and Build</h2>
+<p>Fresh checkout:</p>
+<pre><code class="lang-bash">git clone https://github.com/QiangWu769/msquic_cellular.git
+cd msquic_cellular
+git submodule update --init --recursive
+</code></pre>
+<p>If the repository is already checked out, refresh the submodules with:</p>
+<pre><code class="lang-bash">cd /home/qwu26/msquic_cellular
+git submodule sync --recursive
+git submodule update --init --recursive
+</code></pre>
+<p>Build the <code>secnetperf</code> test binary:</p>
+<pre><code class="lang-bash">cd /home/qwu26/msquic_cellular
+rm -rf build
+cmake -S . -B build \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DQUIC_BUILD_PERF=ON \
+  -DQUIC_ENHANCED_PACKET_LOGGING=ON \
+  -DQUIC_TLS_LIB=openssl
+cmake --build build --target secnetperf -j&quot;$(nproc)&quot;
+</code></pre>
+<p>The expected output binary is:</p>
+<pre><code class="lang-text">/home/qwu26/msquic_cellular/build/bin/Release/secnetperf
+</code></pre>
+<p>Build and push <code>cellninjia_mobile</code> from the repository root:</p>
+<pre><code class="lang-bash">cd /home/qwu26/msquic_cellular
+make -C tools/cellninjia/cellninjia_mobile clean all
+make -C tools/cellninjia/cellninjia_mobile push
+</code></pre>
+<p><code>make -C tools/cellninjia/cellninjia_mobile all</code> cross-compiles <code>cellninjia_mobile</code> for
+Android ARM64 with the Android NDK. On the Buffalo Ubuntu host, the Makefile
+defaults to:</p>
+<pre><code class="lang-text">/home/qwu26/android-ndk-r26d
+</code></pre>
+<p>Override it if needed:</p>
+<pre><code class="lang-bash">make -C tools/cellninjia/cellninjia_mobile clean all ANDROID_NDK_HOME=/path/to/android-ndk
+</code></pre>
+<p><code>make -C tools/cellninjia/cellninjia_mobile push</code> installs the binary on the connected phone as:</p>
+<pre><code class="lang-text">/data/local/tmp/cellninjia_mobile
+</code></pre>
+<p>Forward the bridge port and run the bridge on the phone:</p>
+<pre><code class="lang-bash">adb forward tcp:43555 tcp:43555
+adb shell su -c /data/local/tmp/cellninjia_mobile
+</code></pre>
+<p>Keep <code>cellninjia_mobile</code> running while the Python DIAG parsers in
+<code>tools/cellninjia/</code> connect to <code>127.0.0.1:43555</code>.</p>
+<p>A minimal GBR-CC upload run looks like:</p>
+<pre><code class="lang-bash">./build/bin/Release/secnetperf \
+  -target:&lt;server-ip&gt; \
+  -port:4433 \
+  -cc:bbr \
+  -upload:20mb \
+  -ptput:1 \
+  -cellular:1
+</code></pre>
+<p>Fairness experiments use:</p>
+<pre><code class="lang-bash">./scripts/fairness_gbr_vs_bbr.sh 20mb bbr
+</code></pre>
+<p>Run logs are written under:</p>
+<pre><code class="lang-text">/home/qwu26/msquic_cellular/artifacts/bbr_logs/
+</code></pre>
+<p>The legacy <code>bbr_logs</code> path is kept as a local compatibility symlink to
+<code>artifacts/bbr_logs</code>.</p>
+<h2 id="project-overview">Project Overview</h2>
+<p>This repository is the MsQuic/secnetperf transport prototype for the paper
+&quot;Synchronizing with the Scheduler: Dual-Loop Congestion Control for 5G Uplink
+on Commodity Devices&quot;.</p>
+<p>The implementation adds a cellular scheduler-facing signal, the Grant-to-BSR
+Ratio (GBR), to the QUIC upload path. A DIAG/CellNinjia parser computes GBR from
+BSR and uplink grant/PUSCH telemetry, sends it over a Unix datagram socket, and
+MsQuic uses it to drive a ratio-based pacing and congestion-window controller.</p>
+<h2 id="main-components">Main Components</h2>
+<ul>
+<li><code>src/core/bbr.c</code>: MsQuic BBR hook point and GBR-driven pacing/cwnd logic.</li>
+<li><code>src/perf/lib/cellular_ratio.c</code>: Unix socket receiver for GBR samples.</li>
+<li><code>src/perf/lib/SecNetPerfMain.cpp</code>: <code>secnetperf</code> integration and <code>-cellular</code>
+command-line mode.</li>
+<li><code>tools/cellninjia/</code>: DIAG/CellNinjia parsers for LTE and 5G BSR/grant extraction.</li>
+<li><code>tools/build-scripts/</code>: convenience build wrappers.</li>
+<li><code>analysis/transport/</code>: transport-log analysis scripts.</li>
+<li><code>docs/gbr-cc/</code>: repository layout and GBR-CC notes.</li>
+<li><code>artifacts/bbr_logs/</code>: local experiment logs and generated plots. This directory
+is kept out of Git and should be archived separately.</li>
+</ul>
+<h2 id="important-modes">Important Modes</h2>
+<ul>
+<li><code>-cc:bbr</code>: enables the BBR congestion-control implementation used as the host
+for GBR-CC.</li>
+<li><code>-cellular:0</code>: receives and logs GBR samples without changing congestion-control
+behavior.</li>
+<li><code>-cellular:1</code>: enables GBR-driven control of pacing rate and cwnd.</li>
+</ul>
+<h2 id="local-artifacts">Local Artifacts</h2>
+<p>Generated data, plots, PDFs, build output, and run logs are intentionally ignored
+by Git. The current full working-tree backup, including logs, was created at:</p>
+<pre><code class="lang-text">/home/qwu26/msquic_backups/msquic_cellular_full_20260610_140244.tar
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/QiangWu769/msquic_cellular/blob/main/README.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>diag_bsr.py 蜂窝网络时间精度可视化集成总结 </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="diag_bsr.py 蜂窝网络时间精度可视化集成总结 ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/QiangWu769/msquic_cellular/blob/main/tools/cellninjia/INTEGRATION_SUMMARY.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+
+      <div class="content">
+        <div class="actionbar">
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="diag_bsrpy-蜂窝网络时间精度可视化集成总结">diag_bsr.py 蜂窝网络时间精度可视化集成总结</h1>
+
+<h2 id="修改完成状态">修改完成状态</h2>
+<p>✅ <strong>成功集成蜂窝网络时间精度可视化功能</strong></p>
+<h2 id="关键修改内容">关键修改内容</h2>
+<h3 id="1-添加的核心方法">1. 添加的核心方法</h3>
+<p>在 <code>DiagDataParser</code> 类中添加了两个新方法：</p>
+<h4 id="calculate_cellular_time_orderself-df"><code>calculate_cellular_time_order(self, df)</code></h4>
+<ul>
+<li>基于蜂窝网络时间结构计算精确时间顺序</li>
+<li><strong>SysFN</strong>: 0-1023 (系统帧号，每10ms递增)</li>
+<li><strong>SubFN</strong>: 0-9 (子帧号，每1ms递增)</li>
+<li><strong>蜂窝时间计算</strong>: <code>SysFN × 10ms + SubFN × 1ms</code></li>
+</ul>
+<h4 id="visualize_cellular_timingself-report_filenone"><code>visualize_cellular_timing(self, report_file=None)</code></h4>
+<ul>
+<li>创建四个可视化图表：
+<ol>
+<li><strong>蜂窝时间轴事件分布</strong> - 按SubFN着色</li>
+<li><strong>同一时间戳内事件细分</strong> - 显示前5个多事件时间戳组</li>
+<li><strong>SubFN分布直方图</strong> - 每1ms递增模式</li>
+<li><strong>SysFN分布直方图</strong> - 0-1023循环，每10ms递增</li>
+</ol>
+</li>
+</ul>
+<h3 id="2-修改的主函数">2. 修改的主函数</h3>
+<pre><code class="lang-python">if __name__ == &quot;__main__&quot;:
+    if len(sys.argv) &gt; 1 and sys.argv[1] == &quot;visualize&quot;:
+        # 蜂窝网络时间精度可视化
+        parser = DiagDataParser()
+        success = parser.visualize_cellular_timing(report_file)
+</code></pre>
+<h2 id="使用方法">使用方法</h2>
+<pre><code class="lang-bash"># 运行蜂窝网络时间精度可视化
+python3 diag_bsr.py visualize diag_report.txt
+
+# 运行正常的数据收集模式  
+python3 diag_bsr.py
+</code></pre>
+<h2 id="测试结果">测试结果</h2>
+<p>✅ <strong>测试通过</strong>: <code>diag_bsr_viz_test.py</code></p>
+<ul>
+<li>处理了95,032个事件</li>
+<li>成功生成 <code>diag_report_diag_bsr_integrated.png</code></li>
+<li>正确识别了4,859个包含多个事件的时间戳</li>
+<li>最大同一时间戳事件数：26个</li>
+</ul>
+<h2 id="关键发现">关键发现</h2>
+<h3 id="蜂窝网络时间精度优势">蜂窝网络时间精度优势</h3>
+<ul>
+<li><strong>毫秒级精度</strong>: 通过SysFN和SubFN实现比Unix时间戳更精确的排序</li>
+<li><strong>事件区分</strong>: 同一Unix时间戳内的多个事件可以通过蜂窝时间精确排序</li>
+<li><strong>时间连续性</strong>: SysFN(0-1023)和SubFN(0-9)提供连续的时间刻度</li>
+</ul>
+<h3 id="实际应用示例">实际应用示例</h3>
+<p>Unix时间戳 <code>1755003585.633157</code> 内的事件按蜂窝时间排序：</p>
+<pre><code>SysFN=241, SubFN=7 → 蜂窝时间=2417ms
+SysFN=243, SubFN=2 → 蜂窝时间=2432ms  
+SysFN=245, SubFN=2 → 蜂窝时间=2452ms
+SysFN=245, SubFN=7 → 蜂窝时间=2457ms
+</code></pre>
+<h2 id="生成文件">生成文件</h2>
+<ul>
+<li><code>diag_report_diag_bsr_integrated.png</code> - 集成的蜂窝时间可视化</li>
+<li><code>diag_bsr_viz_test.py</code> - 测试脚本</li>
+<li><code>INTEGRATION_SUMMARY.md</code> - 本总结文档</li>
+</ul>
+<h2 id="结论">结论</h2>
+<p>成功将蜂窝网络时间精度可视化功能集成到 <code>diag_bsr.py</code> 中，实现了：</p>
+<ol>
+<li><strong>精确事件时序</strong> - 基于SysFN和SubFN的毫秒级时间排序</li>
+<li><strong>可视化分析</strong> - 四个专业图表展示时间精度特性</li>
+<li><strong>易于使用</strong> - 简单的命令行参数调用</li>
+<li><strong>数据完整性</strong> - 处理了95K+事件的大数据集</li>
+</ol>
+<p>这个集成为WebRTC诊断数据提供了比Unix时间戳更精确的时间分析能力。</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/QiangWu769/msquic_cellular/blob/main/tools/cellninjia/INTEGRATION_SUMMARY.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
