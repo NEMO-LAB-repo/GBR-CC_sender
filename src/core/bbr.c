@@ -175,7 +175,7 @@ Sigmoid(double x) {
 static inline double
 GetRatioGain(double ratio) {
     // 参数配置
-    const double k = 50.0;            // sigmoid 陡峭程度
+    const double k = 25.0;            // sigmoid 陡峭程度
     const double threshold = 0.2;     // 分界点
     const double center_low = 0.0;    // 减速区 sigmoid 中心点
     const double center_high = 0.4;   // 加速区 sigmoid 中心点

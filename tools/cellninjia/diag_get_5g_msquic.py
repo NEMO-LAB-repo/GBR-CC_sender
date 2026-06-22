@@ -877,12 +877,47 @@ class RingBuffer:
         self.name = name
         self.latest_tti = None
         self.latest_timestamp = None
+        self._items_by_tti = {}
+        self._valid_bsr_items = {}
+        self._next_seq = 0
 
     def __len__(self):
         return self._size
     
+    def _is_valid_bsr_record(self, record):
+        if not isinstance(record, dict) or record.get("logcode") == -1:
+            return False
+        buffer_size = record.get("buffer_size")
+        if not isinstance(buffer_size, (list, tuple)) or len(buffer_size) == 0:
+            return False
+        return buffer_size[0] != -1
+
+    def _remove_indexed_item(self, item):
+        tti = item["tti"]
+        items = self._items_by_tti.get(tti)
+        if items:
+            for index, indexed_item in enumerate(items):
+                if indexed_item is item:
+                    del items[index]
+                    break
+            if not items:
+                self._items_by_tti.pop(tti, None)
+        self._valid_bsr_items.pop(id(item), None)
+
     def push_item(self, item):
+        old_item = self._buf[self._head]
+        if old_item:
+            self._remove_indexed_item(old_item)
+
+        item["_seq"] = self._next_seq
+        self._next_seq += 1
         self._buf[self._head] = item
+        tti = item["tti"]
+        record = item["record"]
+        self._items_by_tti.setdefault(tti, []).append(item)
+        if self._is_valid_bsr_record(record):
+            self._valid_bsr_items[id(item)] = item
+
         self._head = (self._head + 1) % self._cap
         if self._size < self._cap:
             self._size += 1
@@ -909,42 +944,21 @@ class RingBuffer:
             self.updated_since_combine = True
 
     def find_latest_by_tti(self, target_tti):
-        size, head, cap = self._size, self._head, self._cap
-        buf = self._buf
-        for i in range(size):
-            idx = (head - 1 - i) % cap
-            item = buf[idx]
-            if not item: continue
-            if item["tti"] == target_tti:
-                return item["record"]
-        return None
+        items = self._items_by_tti.get(target_tti)
+        if not items:
+            return None
+        return items[-1]["record"]
 
     def find_bsr_in_range(self, start_tti, end_tti):
-        # print(f"[RINGBUFFER] Search BSR between {start_tti} and {end_tti}")
         result = []
-        size, head, cap = self._size, self._head, self._cap
-        buf = self._buf
-        for i in range(size):
-            idx = (head - 1 - i) % cap
-            item = buf[idx]
-            if not item: continue
+        d_start_end = (end_tti - start_tti) % 10240
+        for item in self._valid_bsr_items.values():
             tti_i = item["tti"]
-            record_i = item["record"]
-            logcode = record_i["logcode"]
-            if logcode == -1: continue
-
-            # lcg_i = record_i["lcg"]
-            # bsr_index = record_i["buffer_size"][lcg_i]
-            bsr_index = record_i["buffer_size"][0]
-            if bsr_index == -1: continue
-
-            d_start_end = (end_tti - start_tti) % 10240
             d_start_cur = (tti_i - start_tti) % 10240
             if 0 < d_start_cur < d_start_end:
-                result.append((tti_i, record_i))
-
-        # return result
-        return sorted(result, key=lambda x: (x[0] - start_tti) % 10240)
+                result.append((tti_i, item["record"], item["_seq"]))
+        result.sort(key=lambda x: ((x[0] - start_tti) % 10240, -x[2]))
+        return [(tti, record) for tti, record, _ in result]
 
 # Ratio calculator for MsQuic congestion control
 class ConsistentRatioCalculator:

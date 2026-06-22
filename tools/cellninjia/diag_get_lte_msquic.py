@@ -38,8 +38,8 @@ all_tcp_raw_data_path = "all_tcp_raw_data.txt"
 pre_hdlc_raw_dir = "pre_hdlc_raw"
 pre_hdlc_raw_run_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
 pre_hdlc_raw_path = os.path.join(pre_hdlc_raw_dir, f"raw_frames_oneplus9_{pre_hdlc_raw_run_id}.bin")
-decoded_messages_log_path = "/home/qwu26/webrtc-local/logcode/test0/decoded_messages.txt"
-ratio_data_old_path = "/home/qwu26/webrtc-local/logcode/test0/ratio_data_old.txt"
+decoded_messages_log_path = "/home/qwu26/msquic_cellular/tools/cellninjia/test0/decoded_messages.txt"
+ratio_data_old_path = "/home/qwu26/msquic_cellular/tools/cellninjia/test0/ratio_data_old.txt"
 
 def open_pre_hdlc_raw_log():
     try:
@@ -872,12 +872,50 @@ class RingBuffer:
         self.name = name
         self.latest_tti = None
         self.latest_timestamp = None
+        self._items_by_tti = {}
+        self._valid_bsr_items = {}
+        self._next_seq = 0
 
     def __len__(self):
         return self._size
     
+    def _is_valid_bsr_record(self, record):
+        if not isinstance(record, dict) or record.get("logcode") == -1:
+            return False
+        lcg = record.get("lcg")
+        buffer_size = record.get("buffer_size")
+        if lcg is None or not isinstance(buffer_size, (list, tuple)):
+            return False
+        if lcg < -len(buffer_size) or lcg >= len(buffer_size):
+            return False
+        return buffer_size[lcg] != -1
+
+    def _remove_indexed_item(self, item):
+        tti = item["tti"]
+        items = self._items_by_tti.get(tti)
+        if items:
+            for index, indexed_item in enumerate(items):
+                if indexed_item is item:
+                    del items[index]
+                    break
+            if not items:
+                self._items_by_tti.pop(tti, None)
+        self._valid_bsr_items.pop(id(item), None)
+
     def push_item(self, item):
+        old_item = self._buf[self._head]
+        if old_item:
+            self._remove_indexed_item(old_item)
+
+        item["_seq"] = self._next_seq
+        self._next_seq += 1
         self._buf[self._head] = item
+        tti = item["tti"]
+        record = item["record"]
+        self._items_by_tti.setdefault(tti, []).append(item)
+        if self._is_valid_bsr_record(record):
+            self._valid_bsr_items[id(item)] = item
+
         self._head = (self._head + 1) % self._cap
         if self._size < self._cap:
             self._size += 1
@@ -904,41 +942,21 @@ class RingBuffer:
             self.updated_since_combine = True
 
     def find_latest_by_tti(self, target_tti):
-        size, head, cap = self._size, self._head, self._cap
-        buf = self._buf
-        for i in range(size):
-            idx = (head - 1 - i) % cap
-            item = buf[idx]
-            if not item: continue
-            if item["tti"] == target_tti:
-                return item["record"]
-        return None
+        items = self._items_by_tti.get(target_tti)
+        if not items:
+            return None
+        return items[-1]["record"]
 
     def find_bsr_in_range(self, start_tti, end_tti):
-        # print(f"[RINGBUFFER] Search BSR between {start_tti} and {end_tti}")
         result = []
-        size, head, cap = self._size, self._head, self._cap
-        buf = self._buf
-        for i in range(size):
-            idx = (head - 1 - i) % cap
-            item = buf[idx]
-            if not item: continue
+        d_start_end = (end_tti - start_tti) % 10240
+        for item in self._valid_bsr_items.values():
             tti_i = item["tti"]
-            record_i = item["record"]
-            logcode = record_i["logcode"]
-            if logcode == -1: continue
-
-            lcg_i = record_i["lcg"]
-            bsr_index = record_i["buffer_size"][lcg_i]
-            if bsr_index == -1: continue
-
-            d_start_end = (end_tti - start_tti) % 10240
             d_start_cur = (tti_i - start_tti) % 10240
             if 0 < d_start_cur < d_start_end:
-                result.append((tti_i, record_i))
-
-        # return result
-        return sorted(result, key=lambda x: (x[0] - start_tti) % 10240)
+                result.append((tti_i, item["record"], item["_seq"]))
+        result.sort(key=lambda x: ((x[0] - start_tti) % 10240, -x[2]))
+        return [(tti, record) for tti, record, _ in result]
 
 # NEW: Ratio calculator - average zero BSRs between non-zero BSRs
 class ConsistentRatioCalculator:
@@ -947,7 +965,7 @@ class ConsistentRatioCalculator:
         self.first_nonzero_bsr = None  # (tti, allocated, requested, ratio) - first non-zero BSR in current group
         self.group_buffer = []  # [(tti, allocated, requested, ratio, cellular_timestamp)] - all BSRs in current group
         self.pending_writes = []  # Buffered writes to be flushed
-        self.ratio_file_path = "/home/qwu26/webrtc-local/logcode/test0/ratio_data.txt"
+        self.ratio_file_path = "/home/qwu26/msquic_cellular/tools/cellninjia/test0/ratio_data.txt"
         self.rb_group = rb_group  # Reference to RingBufferGroup for sending ratio to MsQuic
 
     def get_averaged_ratio(self, tti, allocated, requested, individual_ratio, cellular_timestamp):
@@ -1149,7 +1167,7 @@ class RingBufferGroup:
                 if bsrs:
                     combined_bsr_record = self.ringbuffer_bsr.find_latest_by_tti(self.combined_tti)
                     has_valid_combined_bsr = False
-                    if combined_bsr_record["logcode"] == -1:
+                    if combined_bsr_record is None or combined_bsr_record["logcode"] == -1:
                         has_valid_combined_bsr = False
                     else:
                         lcg = combined_bsr_record["lcg"]
@@ -1346,7 +1364,7 @@ def reset_log_files():
     """Reset all log files"""
     log_files = [tcp_and_parse_log_path, parseandlog_data_path, all_tcp_raw_data_path, bsr_log_path,
                  pre_hdlc_raw_path, decoded_messages_log_path, ratio_data_old_path,
-                 "/home/qwu26/webrtc-local/logcode/test0/ratio_data.txt"]
+                 "/home/qwu26/msquic_cellular/tools/cellninjia/test0/ratio_data.txt"]
     for log_file in log_files:
         try:
             if os.path.isfile(log_file):
