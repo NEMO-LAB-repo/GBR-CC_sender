@@ -211,13 +211,6 @@ cd /home/qwu26/GBR-CC_sender
 `-cc:bbr` selects the MsQuic congestion-control path where GBR-CC is integrated.
 `-cellular:1` enables ratio-driven pacing and cwnd control.
 
-### 7. Run fairness experiments
-
-```bash
-cd /home/qwu26/GBR-CC_sender
-./scripts/fairness_gbr_vs_bbr.sh 20mb bbr
-```
-
 ## Runtime Modes and Signal Format
 
 - `-cellular:0`: receive and log GBR ratio samples without applying control.
@@ -234,6 +227,5 @@ cd /home/qwu26/GBR-CC_sender
 - `tools/cellninjia/diag_get_lte_msquic.py`: LTE DIAG parser for MsQuic.
 - `tools/cellninjia/diag_get_5g_msquic.py`: 5G NR DIAG parser for MsQuic.
 - `tools/cellninjia/cellninjia_mobile/`: phone-side DIAG bridge source.
-- `scripts/fairness_gbr_vs_bbr.sh`: fairness experiment wrapper.
 - `analysis/transport/`: transport-log analysis scripts.
 - `docs/gbr-cc/`: GBR-CC notes and repository layout documentation.
