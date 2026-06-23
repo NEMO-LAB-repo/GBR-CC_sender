@@ -15,7 +15,7 @@ implementation. It is designed to run together with the companion cloud receiver
 repository:
 
 ```text
-https://github.com/QiangWu769/GBR-CC_receiver
+https://github.com/NEMO-LAB-repo/GBR-CC_receiver
 ```
 
 Use `GBR-CC_sender` for the phone DIAG bridge, host DIAG parser, GBR ratio
@@ -97,7 +97,7 @@ Use one host parser based on the radio mode:
 Fresh checkout:
 
 ```bash
-git clone https://github.com/QiangWu769/GBR-CC_sender.git
+git clone https://github.com/NEMO-LAB-repo/GBR-CC_sender.git
 cd GBR-CC_sender
 git submodule update --init --recursive
 ```
@@ -188,7 +188,7 @@ MsQuic as one `double` on `/tmp/msquic_cellular_ratio.sock`.
 First start the receiver on the cloud server from the companion repository:
 
 ```bash
-git clone https://github.com/QiangWu769/GBR-CC_receiver.git
+git clone https://github.com/NEMO-LAB-repo/GBR-CC_receiver.git
 cd GBR-CC_receiver
 ```
 
