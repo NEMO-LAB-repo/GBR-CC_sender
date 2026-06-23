@@ -8,6 +8,38 @@ This repository implements GBR-CC in MsQuic/secnetperf. GBR-CC uses cellular
 scheduler telemetry from the phone modem to guide QUIC uplink pacing rate and
 congestion window control.
 
+## Project Architecture
+
+```text
+Phone modem
+    -> cellninjia_mobile on Android
+    -> adb forward to host
+    -> LTE/5G DIAG parser on host
+    -> GBR ratio calculation
+    -> MsQuic/secnetperf sender
+    -> GBR-CC_receiver cloud server
+```
+
+```text
+GBR-CC_sender
++-- tools/cellninjia/cellninjia_mobile/
+|   +-- Android-side DIAG bridge for live modem telemetry
++-- tools/cellninjia/
+|   +-- diag_get_lte_msquic.py
+|   +-- diag_get_5g_msquic.py
+|   +-- Host-side LTE/5G parsers and GBR ratio calculation
++-- src/perf/lib/
+|   +-- Ratio receiver and secnetperf integration
++-- src/core/
+|   +-- GBR-CC control hook in the MsQuic congestion-control path
++-- scripts/
+|   +-- Build and run helpers
++-- analysis/
+|   +-- Offline log analysis utilities
++-- docs/
+    +-- Architecture and implementation notes
+```
+
 ## Companion Cloud Server
 
 This repository is the phone-side, host-parser, and sender-side GBR-CC
