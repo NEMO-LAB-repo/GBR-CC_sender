@@ -1,6 +1,6 @@
 # GBR-CC_sender
 
-This repository is part of the artifact for the SIGCOMM 2026 paper
+This repository is part of the implementation for the SIGCOMM 2026 paper
 **"Synchronizing with the Scheduler: Dual-Loop Congestion Control for 5G Uplink
 on Commodity Devices."**
 
