@@ -215,8 +215,6 @@ cd /home/qwu26/GBR-CC_sender
 
 - `-cellular:0`: receive and log GBR ratio samples without applying control.
 - `-cellular:1`: apply GBR ratio to pacing rate and congestion window control.
-- Socket path: `/tmp/msquic_cellular_ratio.sock`.
-- Packet format: one little-endian `double`, containing only `ratio`.
 
 ## Main Files
 
